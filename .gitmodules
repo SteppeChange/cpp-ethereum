@@ -8,3 +8,6 @@
 [submodule "hera"]
 	path = hera
 	url = https://github.com/ewasm/hera
+[submodule "ethereum_p2p"]
+	path = ethereum_p2p
+	url = git@github.com:ogolosovskiy/ethereum_p2p.git

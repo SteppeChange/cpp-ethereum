@@ -155,6 +155,8 @@ add_subdirectory(libethashseal)
 add_subdirectory(libwebthree)
 add_subdirectory(libweb3jsonrpc)
 
+add_subdirectory(ethereum_p2p)
+
 if (EVMJIT)
     add_subdirectory(evmjit)
 endif()

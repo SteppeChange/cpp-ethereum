@@ -78,3 +78,5 @@ doc/html
 node_modules/
 
 dependency_graph.svg
+
+ethereum_p2p
