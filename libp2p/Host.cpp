@@ -513,6 +513,16 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
     addNodeToNodeTable(Node(_node, _endpoint));
 }
 
+bool Host::ping(NodeIPEndpoint const& _to)
+{
+    auto nodeTable = this->nodeTable();
+    if (!nodeTable)
+        return false;
+    nodeTable->ping(_to);
+    return true;
+
+}
+
 void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
 {
     {

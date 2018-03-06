@@ -172,6 +172,9 @@ public:
 	/// Returns the Node to the corresponding node id or the empty Node if that id is not found.
 	Node node(NodeID const& _id);
 
+	/// Used to ping endpoint.
+	void ping(NodeIPEndpoint _to) const;
+
 #if defined(BOOST_AUTO_TEST_SUITE) || defined(_MSC_VER) // MSVC includes access specifier in symbol name
 protected:
 #else
@@ -202,9 +205,6 @@ private:
 		unsigned distance;
 		std::list<std::weak_ptr<NodeEntry>> nodes;
 	};
-
-	/// Used to ping endpoint.
-	void ping(NodeIPEndpoint _to) const;
 
 	/// Used ping known node. Used by node table when refreshing buckets and as part of eviction process (see evict).
 	void ping(NodeEntry* _n) const;
