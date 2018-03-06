@@ -177,6 +177,8 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
 			auto r = nearest[i];
 			tried.push_back(r);
 			FindNode p(r->endpoint, _node);
+			clog(NetNote) << "FindNode to: " << _node << " : " << r->endpoint.address << ":" << r->endpoint.udpPort << ":" << r->endpoint.tcpPort;
+
 			p.sign(m_secret);
 			DEV_GUARDED(x_findNodeTimeout)
 				m_findNodeTimeout.push_back(make_pair(r->id, chrono::steady_clock::now()));
@@ -295,6 +297,8 @@ void NodeTable::ping(NodeIPEndpoint _to) const
 	DEV_GUARDED(x_nodes)
 		src = m_node.endpoint;
 	PingNode p(src, _to);
+	clog(NetNote) << "Ping to: " << _to.address << ":" << _to.udpPort << ":" << _to.tcpPort;
+
 	p.sign(m_secret);
 	m_socketPointer->send(p);
 }
@@ -412,6 +416,8 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 			case Pong::type:
 			{
 				auto in = dynamic_cast<Pong const&>(*packet);
+				clog(NetNote) << "Pong from: " << in.sourceid;
+
 				// whenever a pong is received, check if it's in m_evictions
 				bool found = false;
 				NodeID leastSeenID;
@@ -470,9 +476,19 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 				
 			case Neighbours::type:
 			{
+
 				auto in = dynamic_cast<Neighbours const&>(*packet);
 				bool expected = false;
 				auto now = chrono::steady_clock::now();
+
+				clog(NetNote) << "Neighbours from: " << in.sourceid;
+
+				for (auto i: in.neighbours) {
+					clog(NetNote) << "    Node: " << i.node << "@" << i.endpoint.address << ":"<<i.endpoint.udpPort<<":"<<i.endpoint.tcpPort;
+				}
+
+				clog(NetNote) << "Total nodes count: " << m_nodes.size();
+
 				DEV_GUARDED(x_findNodeTimeout)
 					m_findNodeTimeout.remove_if([&](NodeIdTimePoint const& t)
 					{
@@ -496,6 +512,7 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 			case FindNode::type:
 			{
 				auto in = dynamic_cast<FindNode const&>(*packet);
+				clog(NetNote) << "FindNode from: " << in.target;
 				vector<shared_ptr<NodeEntry>> nearest = nearestNodeEntries(in.target);
 				static unsigned const nlimit = (m_socketPointer->maxDatagramSize - 109) / 90;
 				for (unsigned offset = 0; offset < nearest.size(); offset += nlimit)
@@ -515,7 +532,9 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 				in.source.address = _from.address();
 				in.source.udpPort = _from.port();
 				addNode(Node(in.sourceid, in.source));
-				
+
+				clog(NetNote) << "Ping from: " << in.sourceid << "@" << in.source.address << " : udp=" << in.source.udpPort << " : tcp=" << in.source.tcpPort;
+
 				Pong p(in.source);
 				p.echo = sha3(in.echo);
 				p.sign(m_secret);
